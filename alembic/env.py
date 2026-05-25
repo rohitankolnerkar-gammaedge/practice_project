@@ -1,14 +1,14 @@
 from logging.config import fileConfig
 
 from sqlalchemy import create_engine, pool
-from alembic import context
 
+from alembic import context
 from app.core.config import settings
 from app.db.base import Base
+from app.models.product import Product
 
 # Import all models so Alembic can detect them
 from app.models.user import User
-
 
 config = context.config
 

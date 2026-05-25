@@ -10,23 +10,11 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
     email: Mapped[str] = mapped_column(
-        String(255),
-        unique=True,
-        nullable=False,
-        index=True
+        String(255), unique=True, nullable=False, index=True
     )
 
-    hashed_password: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False
-    )
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    full_name: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False
-    )
+    full_name: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    role: Mapped[str] = mapped_column(
-        String(50),
-        default="staff"
-    )
+    role: Mapped[str] = mapped_column(String(50), default="staff")
