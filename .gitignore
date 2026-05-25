@@ -37,3 +37,5 @@ dist/
 
 # Jupyter Notebook
 .ipynb_checkpoints/
+
+*.db
