@@ -27,7 +27,11 @@ def auth_headers(client, return_user: bool = False):
     token = login_response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
     if return_user:
-        return headers, {"email": email, "full_name": "Test User"}
+        return headers, {
+            "email": email,
+            "password": password,
+            "full_name": "Test User",
+        }
 
     return headers
 
@@ -85,6 +89,57 @@ def test_get_current_user_profile_requires_token(client):
     response = client.get("/auth/me")
 
     assert response.status_code == 403
+
+
+def test_change_password(client):
+    headers, user = auth_headers(client, return_user=True)
+    new_password = "NewStrongPassword123"
+
+    response = client.patch(
+        "/auth/me/password",
+        json={
+            "current_password": user["password"],
+            "new_password": new_password,
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["message"] == "Password updated successfully"
+
+    old_login_response = client.post(
+        "/auth/login",
+        json={
+            "email": user["email"],
+            "password": user["password"],
+        },
+    )
+    assert old_login_response.status_code == 401
+
+    new_login_response = client.post(
+        "/auth/login",
+        json={
+            "email": user["email"],
+            "password": new_password,
+        },
+    )
+    assert new_login_response.status_code == 200
+
+
+def test_change_password_rejects_wrong_current_password(client):
+    headers = auth_headers(client)
+
+    response = client.patch(
+        "/auth/me/password",
+        json={
+            "current_password": "wrong-password",
+            "new_password": "NewStrongPassword123",
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Current password is incorrect"
 
 
 def test_get_products(client):

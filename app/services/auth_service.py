@@ -44,3 +44,18 @@ class AuthService:
         token = create_access_token({"sub": str(user.id)})
 
         return {"access_token": token}
+
+    @staticmethod
+    def change_password(
+        db: Session,
+        user,
+        current_password: str,
+        new_password: str,
+    ):
+        if not verify_password(current_password, user.hashed_password):
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+        hashed_password = hash_password(new_password)
+        UserRepository.update_password(db, user, hashed_password)
+
+        return {"message": "Password updated successfully"}
