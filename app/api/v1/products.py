@@ -5,6 +5,7 @@ from app.schemas.product import ProductCreate, ProductUpdate, ProductOut
 from app.services.product import ProductService
 from app.db.session import get_db
 from app.core.security import get_current_user
+from app.core.logger import logger
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -27,9 +28,12 @@ def get_products(db: Session = Depends(get_db), user=Depends(get_current_user)):
 def get_product(
     product_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)
 ):
+    logger.info(f"User requested product {product_id}")
     product = service.get_product(db, product_id)
     if not product:
+        logger.warning(f"Product {product_id} not found")
         raise HTTPException(status_code=404, detail="Product not found")
+    logger.info(f"Product {product_id} fetched successfully")
     return product
 
 
