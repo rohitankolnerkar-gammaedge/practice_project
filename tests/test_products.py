@@ -1,7 +1,7 @@
 from uuid import uuid4
 
 
-def auth_headers(client):
+def auth_headers(client, return_user: bool = False):
     email = f"user-{uuid4().hex}@example.com"
     password = "StrongPassword123"
 
@@ -25,7 +25,11 @@ def auth_headers(client):
     assert login_response.status_code == 200
 
     token = login_response.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
+    headers = {"Authorization": f"Bearer {token}"}
+    if return_user:
+        return headers, {"email": email, "full_name": "Test User"}
+
+    return headers
 
 
 def product_payload(**overrides):
@@ -64,6 +68,23 @@ def test_create_product(client):
     body = response.json()
     assert body["owner"]["email"].startswith("user-")
     assert body["owner_id"] == body["owner"]["id"]
+
+
+def test_get_current_user_profile(client):
+    headers, user = auth_headers(client, return_user=True)
+
+    response = client.get("/auth/me", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["email"] == user["email"]
+    assert response.json()["full_name"] == user["full_name"]
+    assert response.json()["role"] == "staff"
+
+
+def test_get_current_user_profile_requires_token(client):
+    response = client.get("/auth/me")
+
+    assert response.status_code == 403
 
 
 def test_get_products(client):
