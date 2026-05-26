@@ -1,8 +1,10 @@
 import pytest
+from passlib.context import CryptContext
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 
+from app.core import security
 from app.main import app
 from app.db.base import Base
 from app.db.session import get_db
@@ -33,6 +35,16 @@ def override_get_db():
 
 
 app.dependency_overrides[get_db] = override_get_db
+
+
+@pytest.fixture(autouse=True)
+def fast_password_hashing(monkeypatch):
+    test_pwd_context = CryptContext(
+        schemes=["bcrypt"],
+        bcrypt__rounds=4,
+        deprecated="auto",
+    )
+    monkeypatch.setattr(security, "pwd_context", test_pwd_context)
 
 
 @pytest.fixture(scope="function")

@@ -4,10 +4,15 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from sqlalchemy.orm import Session
 
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+from app.core.config import settings
+from app.db.session import get_db
+from app.repositories.user_repository import UserRepository
+
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -33,10 +38,18 @@ def create_access_token(data: dict) -> str:
 security = HTTPBearer()
 
 
-def get_current_user(token=Depends(security)):
+def get_current_user(token=Depends(security), db: Session = Depends(get_db)):
     try:
         payload = jwt.decode(token.credentials, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
 
-    except JWTError:
+        user = UserRepository.get_by_id(db, int(user_id))
+        if user is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        return user
+
+    except (JWTError, ValueError):
         raise HTTPException(status_code=401, detail="Invalid token")

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ProductCreate(BaseModel):
@@ -21,14 +21,15 @@ class ProductUpdate(BaseModel):
 
 
 class UserBasic(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     email: str
 
-    class Config:
-        from_attributes = True
-
 
 class ProductOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     sku: str
@@ -39,6 +40,3 @@ class ProductOut(BaseModel):
 
     owner_id: int
     owner: UserBasic
-
-    class Config:
-        from_attributes = True
